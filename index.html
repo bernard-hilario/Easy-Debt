@@ -1,0 +1,335 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyDebt — Debt Management Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="bg-mesh"></div>
+    <div class="noise-overlay"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-content">
+            <div class="nav-brand">
+                <div class="nav-brand-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9j.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+                </div>
+                EasyDebt
+            </div>
+            <button class="mobile-nav-toggle" onclick="toggleMobileNav()">☰</button>
+            <div class="nav-links" id="navLinks">
+                <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+                <button class="nav-btn" onclick="showPage('inventory')">Inventory</button>
+                <button class="nav-btn" onclick="showPage('addDebt')">New Debt</button>
+                <button class="nav-btn" onclick="showPage('debtList')">Debts</button>
+                <button class="nav-btn" onclick="showPage('paidHistory')">History</button>
+                <button class="nav-btn" onclick="logout()">Logout</button>
+            </div>
+            <div class="nav-actions">
+                <!-- Stock notification bell -->
+                <div style="position:relative" id="stockBellWrap">
+                    <button class="theme-toggle" id="stockBell" onclick="toggleStockPanel()" title="Stock alerts" style="display:none;position:relative">
+                        🔔
+                        <span id="stockBadge" style="position:absolute;top:-5px;right:-5px;background:var(--danger);color:white;font-size:0.6rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px"></span>
+                    </button>
+                    <div id="stockPanel" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:999;overflow:hidden">
+                        <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:8px">
+                            ⚠️ Low / Out of Stock
+                        </div>
+                        <div id="stockPanelList" style="max-height:320px;overflow-y:auto"></div>
+                    </div>
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Login Page -->
+        <div class="page active" id="loginPage">
+            <div class="login-wrapper">
+                <div class="login-card">
+                    <div class="login-brand">
+                        <div class="login-brand-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+                        </div>
+                        <h1>Welcome Back</h1>
+                        <p>Sign in to manage your debt records</p>
+                    </div>
+                    <div class="alert alert-error" id="loginError">
+                        <span>⚠️</span> Invalid username or password
+                    </div>
+                    <form id="loginForm" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" required placeholder="Enter your username">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="password-field">
+                                <input type="password" id="password" required placeholder="Enter your password">
+                                <button type="button" class="password-toggle" id="passwordToggle" onclick="togglePasswordVisibility()" aria-label="Show password" aria-pressed="false">
+                                    Show
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                            Sign In
+                        </button>
+                    </form>
+                    <div class="login-hint">
+                        Default credentials: <code>gladys</code> / <code>admin</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="page" id="dashboard">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p>Overview of your debt management system</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Total Customers</span>
+                        <div class="stat-icon purple">👥</div>
+                    </div>
+                    <div class="stat-value" id="totalCustomers">0</div>
+                    <div class="stat-change">Unique debtors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Outstanding Balance</span>
+                        <div class="stat-icon orange">💰</div>
+                    </div>
+                    <div class="stat-value" id="totalOutstanding">₱0.00</div>
+                    <div class="stat-change">Total unpaid amount</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Inventory Items</span>
+                        <div class="stat-icon blue">📦</div>
+                    </div>
+                    <div class="stat-value" id="totalItems">0</div>
+                    <div class="stat-change">Products in stock</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Paid Records</span>
+                        <div class="stat-icon green">✅</div>
+                    </div>
+                    <div class="stat-value" id="totalPaid">0</div>
+                    <div class="stat-change">Completed transactions</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon">⚡</span> Quick Actions</h2>
+                </div>
+                <div class="actions-grid">
+                    <div class="action-card" onclick="showPage('addDebt')">
+                        <div class="icon">➕</div>
+                        <h3>Add New Debt</h3>
+                        <p>Record a new debt transaction for a customer</p>
+                    </div>
+                    <div class="action-card" onclick="showPage('debtList')">
+                        <div class="icon">📋</div>
+                        <h3>View Debt List</h3>
+                        <p>See all outstanding and unpaid debts</p>
+                    </div>
+                    <div class="action-card" onclick="showPage('paidHistory')">
+                        <div class="icon">📜</div>
+                        <h3>Paid History</h3>
+                        <p>Review completed and paid transactions</p>
+                    </div>
+                    <div class="action-card" onclick="showPage('inventory')">
+                        <div class="icon">🎒</div>
+                        <h3>Inventory</h3>
+                        <p>Manage items and set pricing</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Page -->
+        <div class="page" id="inventory">
+            <div class="page-header">
+                <h1>Inventory</h1>
+                <p>Manage your products and pricing</p>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon">🏷️</span> Add New Item</h2>
+                </div>
+                <div class="alert alert-success" id="itemSuccess">
+                    <span>✅</span> Item added successfully
+                </div>
+                <div class="alert alert-error" id="itemError"></div>
+                <form id="itemForm" onsubmit="handleAddItem(event)">
+                    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px">
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="itemName">Item Name</label>
+                            <input type="text" id="itemName" required placeholder="e.g., Rice, Sugar">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="itemPrice">Price (₱)</label>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <input type="number" id="itemPrice" required min="0" step="0.01" placeholder="0.00" style="flex:1">
+                                <div style="display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0">
+                                    <button type="button" id="unitPcs" onclick="setUnit('pcs')"
+                                        style="padding:10px 14px;border:none;background:var(--accent);color:white;font-weight:600;font-size:0.875rem;font-family:inherit;cursor:pointer;transition:var(--transition)">pcs</button>
+                                    <button type="button" id="unitKg" onclick="setUnit('kg')"
+                                        style="padding:10px 14px;border:none;background:var(--bg-tertiary);color:var(--text-secondary);font-weight:600;font-size:0.875rem;font-family:inherit;cursor:pointer;transition:var(--transition)">kg</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="priceUnit" value="pcs">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="itemStock">Initial Stock</label>
+                            <input type="number" id="itemStock" min="0" step="0.001" placeholder="0" value="0">
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-success">Save Item</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm('itemForm');setUnit('pcs')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon">🎒</span> Items & Prices</h2>
+                </div>
+                <div id="inventoryList"><div class="loading">Loading</div></div>
+            </div>
+        </div>
+
+        <!-- Add Debt Page -->
+        <div class="page" id="addDebt">
+            <div class="page-header">
+                <h1>New Debt</h1>
+                <p>Record a new debt transaction</p>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon">➕</span> Debt Details</h2>
+                </div>
+                <div class="alert alert-success" id="debtSuccess">
+                    <span>✅</span> Debt recorded successfully
+                </div>
+                <div class="alert alert-error" id="debtError"></div>
+                <form id="debtForm" onsubmit="handleAddDebt(event)">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="debtCustomer">Customer Name</label>
+                            <input type="text" id="debtCustomer" required placeholder="Enter customer name">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="debtPhone">Phone Number</label>
+                            <input type="tel" id="debtPhone" placeholder="e.g. 09123456789">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="debtItemSelect">Select Item</label>
+                            <select id="debtItemSelect" required onchange="updateDebtTotal()">
+                                <option value="">-- Choose an item --</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="debtQuantity" id="debtQuantityLabel">Quantity</label>
+                            <input type="number" id="debtQuantity" required min="0.001" step="0.001" value="1" onchange="updateDebtTotal()" onkeyup="updateDebtTotal()">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="debtDueDate">Due Date</label>
+                            <input type="date" id="debtDueDate" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="debtInterest">Interest Rate (% / day overdue)</label>
+                            <input type="number" id="debtInterest" min="0" step="0.01" placeholder="0 = no interest" value="0">
+                        </div>
+                        <div class="total-display" style="margin:0;align-self:end">
+                            <h3>Total Amount</h3>
+                            <div class="amount" id="debtTotalDisplay">₱0.00</div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;grid-column:1/-1">
+                            <label for="debtNotes">Notes (Optional)</label>
+                            <textarea id="debtNotes" rows="2" placeholder="Additional details..." style="resize:none"></textarea>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-success">Save Debt</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm('debtForm')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Debt List Page -->
+        <div class="page" id="debtList">
+            <div class="page-header">
+                <h1>Unpaid Debts</h1>
+                <p>All outstanding debt records</p>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon">📋</span> Debt Records</h2>
+                    <div style="position:relative;width:260px">
+                        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none">🔍</span>
+                        <input type="text" id="debtSearch" placeholder="Search customer or item…"
+                            oninput="filterDebts()"
+                            style="width:100%;padding:8px 12px 8px 36px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.875rem;font-family:inherit;outline:none;transition:var(--transition)"
+                            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+                    </div>
+                </div>
+                <div id="debtListContainer"><div class="loading">Loading debts</div></div>
+            </div>
+        </div>
+
+        <!-- Paid History Page -->
+        <div class="page" id="paidHistory">
+            <div class="page-header">
+                <h1>Payment History</h1>
+                <p>Completed and paid transactions</p>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon">📜</span> Paid Records</h2>
+                    <div style="position:relative;width:260px">
+                        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none">🔍</span>
+                        <input type="text" id="historySearch" placeholder="Search customer or item…"
+                            oninput="filterHistory()"
+                            style="width:100%;padding:8px 12px 8px 36px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.875rem;font-family:inherit;outline:none;transition:var(--transition)"
+                            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+                    </div>
+                </div>
+                <div id="paidListContainer"><div class="loading">Loading history</div></div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="firebase.js"></script>
+    <script defer src="script.js"></script>
+    <!-- Logout overlay -->
+    <div id="logoutOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,17,23,0.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:opacity 0.4s ease">
+        <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:1.75rem;box-shadow:0 8px 32px rgba(99,102,241,0.35);animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)">
+            👋
+        </div>
+        <div style="text-align:center">
+            <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary);margin-bottom:8px" id="logoutMsg">Thank you, logged out successfully</div>
+            <div id="logoutSub" style="font-size:0.9rem;color:var(--text-secondary);opacity:0;transition:opacity 0.4s ease">Redirecting to login page…</div>
+        </div>
+        <div style="width:200px;height:3px;background:var(--bg-tertiary);border-radius:2px;overflow:hidden;margin-top:8px">
+            <div style="height:100%;background:linear-gradient(90deg,var(--gradient-start),var(--gradient-end));border-radius:2px;animation:logoutBar 2.8s linear forwards"></div>
+        </div>
+    </div>
+</body>
+</html> 
